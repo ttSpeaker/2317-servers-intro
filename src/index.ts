@@ -1,42 +1,51 @@
 import http from "http";
 import axios from "axios";
-const server = http.createServer(
-  async (req: http.IncomingMessage, res: http.ServerResponse) => {
-    const urlParts = req.url?.split("/");
-    if (urlParts === undefined) {
-      res.statusCode = 400;
-      res.end("BAD REQUEST");
-      return;
-    }
-    console.log(urlParts);
-    if (
-      req.method === "GET" &&
-      urlParts[1] === "clima" &&
-      urlParts[2] == "sugerencia" &&
-      urlParts[3] !== undefined
-    ) {
-      try {
-        const cityName = urlParts[3];
-        const result = await axios.get(
-          `http://api.openweathermap.org/data/2.5/weather?q=${cityName}&APPID=db26c5d0832190ebdd4407403115251d`
-        );
-        console.log(result.data);
-        res.setHeader("content-type", "application/json");
-        res.statusCode = 200;
-        res.end(JSON.stringify(result.data));
-        return;
-      } catch (error: any) {
-        res.statusCode = 500;
-        res.end(error.message);
-        return;
-      }
-    }
-    res.statusCode = 404;
-    res.end("NOT FOUND");
+import express from "express";
+import { routerClima } from "./routers";
+import bodyParser from "body-parser";
+
+const app = express();
+
+app.use(bodyParser.json());
+app.use(
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.log(
+      `REQUEST RECEIVED:\n${req.method} ${req.url}\n${JSON.stringify(req.body)}`
+    );
+    next();
   }
 );
 
-server.listen(3000, () => {
+app.use("/clima", routerClima);
+
+app.listen(3000, () => {
   console.log("Server running on port 3000");
 });
 
+// API REST CLIMA
+// consultar clima actual por ciudad
+// consultar clima actual por ubicacion (lat/lon)
+
+// consultar pronostico por ciudad (cant dias opcional)
+// consultar pronostico por ubicacion (lat/lon) (cant dias opcional)
+
+// consultar ciudades (filtrar pais opcional)
+
+// guardar lugares favorito
+// editar favoritos
+// ver favoritos
+
+// ENDPOINTS
+// GET /clima/ciudad/:ciudad => www.weather.com/clima/ciudad/montevideo
+// GET /clima/ubicacion/lat/:lat/lon/:lon => www.weather.com/clima/ubicacion/lat/41231/lon/-21314
+
+// GET /pronostico/ciudad/:ciudad
+// GET /pronostico/ubicacion/lat/:lat/lon/:lon (lat y lon son PATH params)
+
+// GET /ciudades?pais=UY
+
+// POST /favoritos
+// PUT /favoritos/:id
+// GET /favoritos => www.weather.com/favoritos
+// GET /favoritos/:id => www.weather.com/favoritos/1234
+// DELETE /favoritos/:id
